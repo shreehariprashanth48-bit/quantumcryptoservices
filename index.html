@@ -94,10 +94,63 @@
       border-radius: 8px;
       font-weight: bold;
       transition: 0.3s;
+      border: none;
+      cursor: pointer;
     }
 
     .btn:hover {
       background: white;
+    }
+
+    .ssl-checker {
+      background: #111827;
+      padding: 40px;
+      border-radius: 16px;
+      margin-top: 40px;
+      border: 1px solid #1f2937;
+    }
+
+    .ssl-checker input {
+      width: 100%;
+      padding: 15px;
+      border-radius: 10px;
+      border: none;
+      margin-top: 20px;
+      font-size: 16px;
+      background: #1f2937;
+      color: white;
+    }
+
+    .result {
+      margin-top: 30px;
+      padding: 20px;
+      border-radius: 12px;
+      background: #0f172a;
+      display: none;
+    }
+
+    .loading {
+      color: #00ffe5;
+      margin-top: 20px;
+      display: none;
+    }
+
+    .success {
+      color: #22c55e;
+    }
+
+    .error {
+      color: #ef4444;
+    }
+
+    @media(max-width:768px){
+      .hero h1 {
+        font-size: 2.5rem;
+      }
+
+      .hero p {
+        font-size: 1rem;
+      }
     }
   </style>
 </head>
@@ -154,6 +207,32 @@
   </section>
 
   <section>
+    <h2>SSL Certificate Checker</h2>
+
+    <div class="ssl-checker">
+      <p>
+        Enter a domain name to check SSL certificate information.
+      </p>
+
+      <input
+        type="text"
+        id="domainInput"
+        placeholder="example.com"
+      />
+
+      <button class="btn" onclick="checkSSL()">
+        Check SSL
+      </button>
+
+      <div class="loading" id="loading">
+        Checking SSL certificate...
+      </div>
+
+      <div class="result" id="result"></div>
+    </div>
+  </section>
+
+  <section>
     <h2>Our Vision</h2>
 
     <p>
@@ -169,5 +248,66 @@
     </p>
   </footer>
 
+  <script>
+    async function checkSSL() {
+      const domain = document.getElementById('domainInput').value.trim();
+      const result = document.getElementById('result');
+      const loading = document.getElementById('loading');
+
+      if (!domain) {
+        alert('Please enter a domain name');
+        return;
+      }
+
+      result.style.display = 'none';
+      loading.style.display = 'block';
+
+      try {
+        const response = await fetch(
+          `https://api.ssllabs.com/api/v3/analyze?host=${domain}`
+        );
+
+        const data = await response.json();
+
+        loading.style.display = 'none';
+        result.style.display = 'block';
+
+        if (data.status === 'READY') {
+          const endpoint = data.endpoints?.[0];
+
+          result.innerHTML = `
+            <h3 class="success">SSL Check Successful</h3>
+            <br>
+            <p><strong>Domain:</strong> ${domain}</p>
+            <p><strong>SSL Grade:</strong> ${endpoint?.grade || 'N/A'}</p>
+            <p><strong>IP Address:</strong> ${endpoint?.ipAddress || 'N/A'}</p>
+            <p><strong>Status:</strong> Secure Connection Active</p>
+          `;
+        } else {
+          result.innerHTML = `
+            <h3 class="error">SSL Scan In Progress</h3>
+            <br>
+            <p>The SSL Labs scan is still processing.</p>
+            <p>Please try again in a few moments.</p>
+          `;
+        }
+
+      } catch (error) {
+        loading.style.display = 'none';
+        result.style.display = 'block';
+
+        result.innerHTML = `
+          <h3 class="error">Error</h3>
+          <br>
+          <p>Unable to fetch SSL information.</p>
+          <p>Please check the domain and try again.</p>
+        `;
+      }
+    }
+  </script>
+
 </body>
 </html>
+
+
+Your website will then include a working SSL Checker section.
